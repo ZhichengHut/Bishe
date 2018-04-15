@@ -1,24 +1,22 @@
 #include "Node.h"
 
-Node::Node(vector<Mat> sample, vector<int> label, int w_w){	
-	imgList.assign(sample.begin(), sample.end());
-	imgLabel.assign(label.begin(), label.end());
-	sample_num = imgList.size();
+Node::Node(vector<Mat> &sample, vector<int> &label, int *ID, int NUM, int NUM_1, int w_w){	
+	imgList = sample;
+	imgLabel = label;
+	index = ID;
+	sample_num = NUM;
+	num_1 = NUM_1;
 	LeafNode = false;
 	infoGain = 0;
-	Entro = calculate_entropy(imgLabel);
+	Entro = calculate_entropy(sample_num, num_1);
 	theta = 0;
 	d = w_w;
 	//cout << "Entro = " << Entro << endl;
+	//cout << "In Node, sample_num = " << sample_num << ", num_1 = " << num_1 << ", Entro = " << Entro << "index[sn] = " << index[sample_num-1] << endl;
 }
 
 Node::~Node(){
-	imgList.clear();
-	imgLabel.clear();
-	leftImg.clear();
-	imgLabel.clear();
-	leftLabel.clear();
-	rightLabel.clear();
+	delete []index;
 }
 
 
@@ -40,9 +38,9 @@ void Node::select_Para(){
 
 void Node::split_Node(){
 	//cout << "element # = " << imgList.size() << endl;
-	int pppkkk = accumulate(imgLabel.begin() , imgLabel.end() , 0);
+	//int pppkkk = accumulate(imgLabel.begin() , imgLabel.end() , 0);
 	//cout << "#1 = " << pppkkk << endl;
-	if(pppkkk == 0 || pppkkk==imgLabel.size())
+	if(num_1 == 0 || num_1==sample_num)
 		return;
 
 	srand (time(NULL));
@@ -61,40 +59,51 @@ void Node::split_Node(){
 		//cout << "tmp : " << x1_tmp << " " << y1_tmp << " "  << x2_tmp << " "  << y2_tmp << " "  << " " << d_tmp << endl;
 
 		//vector<Mat> leftImg_tmp, rightImg_tmp;
-		vector<int> leftLabel_tmp, rightLabel_tmp;
+		//vector<int> leftLabel_tmp, rightLabel_tmp;
 		//leftLabel_tmp.resize(imgLabel.size());
 		//rightLabel_tmp.resize(imgLabel.size());
-		leftLabel_tmp.reserve(imgLabel.capacity());
-		rightLabel_tmp.reserve(imgLabel.capacity());
+		//leftLabel_tmp.reserve(imgLabel.capacity());
+		//rightLabel_tmp.reserve(imgLabel.capacity());
 		//cout << "tmp size: " << leftLabel_tmp.size() << " " << rightLabel_tmp.size() << endl;
 		//cin.get();
 
-		int ss_index1 = rand() % imgLabel.size();
-		float theta_tmp = mean(imgList[ss_index1](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[ss_index1](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
+		int ss_index1 = rand() % sample_num;
+		//cout << "ss1 = " << index[ss_index1] << endl;
+		float theta_tmp = mean(imgList[index[ss_index1]](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[index[ss_index1]](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
 		while(true){
-			int ss_index2 = rand() % imgLabel.size();
-			if(imgLabel[ss_index1] + imgLabel[ss_index2] == 1){
-				theta_tmp += (mean(imgList[ss_index2](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[ss_index2](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0]);
+			int ss_index2 = rand() % sample_num;
+			if(imgLabel[index[ss_index1]] + imgLabel[index[ss_index2]] == 1){
+				//cout << "ss2 = " << index[ss_index2] << endl;
+				theta_tmp += (mean(imgList[index[ss_index2]](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[index[ss_index2]](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0]);
 				theta_tmp /= 2.0;
 				break;
 			}
 		}
 
-		for(int p=0; p<imgList.size(); p++){
+		int left_count = 0;
+		int left_1 = 0;
+		int right_count = 0;
+		int right_1 = 0;
+
+		for(int p=0; p<sample_num; p++){
 			//cout << "img size " << imgList[p].cols <<" " << imgList[p].rows << endl;
 
-			float mean1 = mean(imgList[p](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0];
+			float mean1 = mean(imgList[index[p]](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0];
 			//cout << 11 << endl;
-			float mean2 = mean(imgList[p](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
+			float mean2 = mean(imgList[index[p]](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
 			//cout << 22 << endl;
 
 			if(mean1-mean2>theta_tmp){
 				//leftImg_tmp.push_back(imgList[p]);
-				leftLabel_tmp.push_back(imgLabel[p]);
+				//leftLabel_tmp.push_back(imgLabel[p]);
+				left_count++;
+				left_1 += imgLabel[index[p]];
 			}
 			else{
 				//rightImg_tmp.push_back(imgList[p]);
-				rightLabel_tmp.push_back(imgLabel[p]);
+				//rightLabel_tmp.push_back(imgLabel[p]);
+				right_count++;
+				right_1 += imgLabel[index[p]];
 			}
 		}
 
@@ -103,7 +112,7 @@ void Node::split_Node(){
 		//cout << "right E = " << calculate_entropy(rightLabel_tmp) << ", right length = " << rightLabel_tmp.size() << ", 1 = " <<accumulate(rightLabel_tmp.begin(), rightLabel_tmp.end(),0) << endl;
 			
 
-		float infoGain_new = Entro - (leftLabel_tmp.size()*calculate_entropy(leftLabel_tmp) + rightLabel_tmp.size()*calculate_entropy(rightLabel_tmp))/imgList.size();
+		float infoGain_new = Entro - (left_count*calculate_entropy(left_count, left_1) + right_count*calculate_entropy(right_count, right_1))/sample_num;
 		
 		//cout << "new gain = " << infoGain_new << endl;
 		//cin.get();
@@ -124,43 +133,44 @@ void Node::split_Node(){
 		//cout << "tmp size: " << leftLabel_tmp.size() << " " << rightLabel_tmp.size() << endl;
 	}
 
-	//cout << "new gain = " << infoGain << endl;
+	int *index_left_tmp = new int[sample_num];
+	int *index_right_tmp = new int[sample_num];
+	count_left = 0;
+	count_left_1 = 0;
+	count_right = 0;
+	count_right_1 = 0;
 
-	/*vector<Mat>().swap(leftImg);
-	vector<Mat>().swap(rightImg);
-	vector<int>().swap(leftLabel);
-	vector<int>().swap(rightLabel);*/
-
-	leftImg.clear();
-	rightImg.clear();
-	leftLabel.clear();
-	rightLabel.clear();
-
-	//cout << "split node " << endl;
-	for(int p=0; p<imgList.size(); p++){
+	for(int p=0; p<sample_num; p++){
 		//cout << "location: " << x1 << " " << y1 << " " << x2 << " " << y2 << " " << d << endl;
-		float mean1 = mean(imgList[p](Rect(x1,y1,d,d)))[0];
+		float mean1 = mean(imgList[index[p]](Rect(x1,y1,d,d)))[0];
 		//cout << 33 << endl;
-		float mean2 = mean(imgList[p](Rect(x2,y2,d,d)))[0];
+		float mean2 = mean(imgList[index[p]](Rect(x2,y2,d,d)))[0];
 		//cout << 44 << endl;
 		if(mean1-mean2>theta){
-			leftImg.push_back(imgList[p]);
-			leftLabel.push_back(imgLabel[p]);
+			index_left_tmp[count_left] = index[p];
+			count_left++;
+			count_left_1 += imgLabel[index[p]];
 		}
 		else{
-			rightImg.push_back(imgList[p]);
-			rightLabel.push_back(imgLabel[p]);
+			index_right_tmp[count_right] = index[p];
+			count_right++;
+			count_right_1 += imgLabel[index[p]];
 		}
 	}
+
+	left_index = new int[count_left];
+	memcpy(left_index, index_left_tmp, count_left*sizeof(int));
+	delete []index_left_tmp;
+
+	right_index = new int[count_right];
+	memcpy(right_index, index_right_tmp, count_right*sizeof(int));
+	delete []index_right_tmp;
 }
 
 void Node::release_Vector(){
-	imgList.clear();
-	imgLabel.clear();
-	leftImg.clear();
-	imgLabel.clear();
-	leftLabel.clear();
-	rightLabel.clear();
+	delete []index;
+	//delete []left_index;
+	//delete []right_index;
 }
 
 int Node::predict(Mat test_img){
@@ -178,12 +188,12 @@ int Node::predict(Mat test_img){
 	}
 }
 
-int Node::judge(int num_1, int num_0){
-	//float p_1 = 1.0 * accumulate(imgLabel.begin(), imgLabel.end(),0) / num_1;
-	//float p_2 = 1.0 * (imgLabel.size()-accumulate(imgLabel.begin(), imgLabel.end(),0)) / num_0;
+int Node::judge(int num_positive, int num_negative){
+	//float p_1 = 1.0 * accumulate(imgLabel.begin(), imgLabel.end(),0) / num_positive;
+	//float p_2 = 1.0 * (imgLabel.size()-accumulate(imgLabel.begin(), imgLabel.end(),0)) / num_negative;
 
-	int p_1 = 1.0 * accumulate(imgLabel.begin(), imgLabel.end(),0);
-	int p_2 = imgLabel.size() - p_1;
+	int p_1 = num_1;
+	int p_2 = sample_num - p_1;
 
 	if(p_2 > p_1)
 		return 0;
@@ -191,7 +201,20 @@ int Node::judge(int num_1, int num_0){
 		return 1;
 }
 
-float Node::calculate_entropy(vector<int> label){
+float Node::calculate_entropy(int count, int label_1){
+	float entropy = 0;
+
+	if(count != 0){
+		float pp = 1.0 * label_1 / count;						//positive%
+		float np = 1.0 * (count - label_1) / count;		//negtive%
+
+		if(pp!=0 && np !=0)
+			entropy = -1.0*pp*log(1.0*pp)/log(2.0) - 1.0*np*log(1.0*np)/log(2.0);
+	}
+	return entropy;
+}
+
+/*float Node::calculate_entropy(vector<int> label){
 	float entropy = 0;
 
 	if(label.size() != 0){
@@ -203,4 +226,4 @@ float Node::calculate_entropy(vector<int> label){
 			entropy = -1.0*pp*log(1.0*pp)/log(2.0) - 1.0*np*log(1.0*np)/log(2.0);
 	}
 	return entropy;
-}
+}*/

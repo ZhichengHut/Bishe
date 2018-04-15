@@ -8,6 +8,13 @@
 
 #include <time.h>
 
+void copy1(vector<Mat> &lb){
+	vector<Mat> img_cp = lb;
+	cout << "copy1, size = " << sizeof(img_cp) << endl;
+	imshow("123", img_cp[0]);
+	waitKey(0);
+}
+
 int main(){
 	string train_fold = "C:/45 Thesis/data/train/";
 	string test_fold = "C:/45 Thesis/data/test/";
@@ -37,6 +44,10 @@ int main(){
 	//cout << "read time = " << end_rd - start_rd << endl;
 	cout << "*****************Reading completed*****************" << endl << endl;
 
+	cout << "origianl" << sizeof(imgTrain) << endl;
+	copy1(imgTrain);
+	cin.get();
+
 	/*cin.get();
 	imgTrain.clear();
 	cout << "clear completed" << endl;
@@ -51,7 +62,7 @@ int main(){
 		int window_width = 30;
 
 		int tree_num = i;
-		int sample_num = 3000;
+		int sample_num = 2000;
 		int maxDepth = 20;
 		int minLeafSample = 1;
 		float minInfo = 0;
@@ -64,7 +75,28 @@ int main(){
 		double train_t = (end - start) / CLOCKS_PER_SEC ;
 		cout << "*****************Training completed*****************" << endl << endl;
 
-		for(float j=0.6; j<0.8; j+=0.05){
+		cout << "*****************Start to evaluate the performance*****************" << endl;
+		start=clock();
+		get_predict_result(RF, test_fold);
+		end=clock();
+		double test_t = end - start;
+		cout << "*****************Evaluation completed*****************" << endl << endl;
+
+		cout << "*****************Start to calculate F1 score*****************" << endl;
+		float F1_score = get_F1_score(test_fold);
+		cout << "*****************Calculation completed*****************" << endl << endl;
+
+		ofstream fin("e:\\45 Thesis\\result\\result.csv",ios::app);
+		if(!fin){
+			cout << "open file error" <<endl; 
+			cin.get();
+			return 0;
+		}
+
+		fin <<",tree num," <<  tree_num << ",sumple num," << sample_num << ",maxDepth," << maxDepth << ",minLeafSample," << minLeafSample << ",minInfo," << minInfo <<",train time," << train_t << ",test time," <<  end - start <<",window width," << window_width << endl;
+		fin.close();
+
+		/*for(float j=0.6; j<0.8; j+=0.05){
 			cout << "*****************Start to evaluate the performance*****************" << endl;
 			start=clock();
 			float prob_threshold = j;
@@ -86,7 +118,7 @@ int main(){
 
 			fin <<",tree num," <<  tree_num << ",sumple num," << sample_num << ",maxDepth," << maxDepth << ",minLeafSample," << minLeafSample << ",minInfo," << minInfo <<",train time(second)," << train_t << ",test time(second)," <<  test_t <<",window width," << window_width << ",prob threshold," << prob_threshold << endl;
 			fin.close();
-		}
+		}*/
 		
 		delete RF;
 	}
@@ -96,55 +128,4 @@ int main(){
 
 	imgTrain.clear();
 	labelTrain.clear();
-
-	/*vector<Data*> dd;
-
-	for(int i=0; i<10; i++){
-		Data *d = new Data(imgList[i], labelList[i]);
-		dd.push_back(d);
-	}
-
-	for(int i=0; i<10; i++){
-		imshow("", dd[i]->get_Img());
-		waitKey(0);
-	}*/
-
-
-	//cout << "row = " << imgList[0].rows << " col = " << imgList[0].cols << endl;
-	//cout << "size = " << imgList[0]. << endl;
-	//Node *nt = new Node(imgList, labelList);
-	//cout << nt->calculate_entropy(labelList) << endl;;
-
-	/*Tree *tree = new Tree(imgList, labelList);
-	tree->train();
-
-	cout << tree->predict(imgList[27]) << endl;*/
-
-	//test the infoGain
-	/*vector<Mat> tmpImg;
-	vector<int> tmpLab;
-	for(int i=0; i<imgList.size(); i++){
-		tmpImg.push_back(imgList[i]);
-		tmpLab.push_back(labelList[i]);
-	}*/
-
-	/*Node *test = new Node(imgList, labelList);
-	test->select_Para();
-
-	test->split_Node();
-	//test->calculate_infoGain();
-	cout << "infogain: " << test->get_infoGain() << endl;
-
-	vector<Mat> left = test->get_Left();
-	vector<Mat> right = test->get_Right();
-
-	cout << left.size() << " " << right.size() << endl;*/
-
-
-	//test the data read
-	/*for(int i=0; i<10; i++){
-		namedWindow("123");
-		imshow("123", imgList[i]);
-		waitKey(0);
-	}*/
 }

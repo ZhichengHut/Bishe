@@ -17,10 +17,12 @@ private:
 
 	vector<Mat> sample;
 	vector<int> label;
+	int *index;
+	int count;
 	Node **node;
 
 public:
-	Tree(vector<Mat> SP, vector<int> LB, int w_w = 1, int maxD=10, int minL=1, float minInfo=0);
+	Tree(vector<Mat> &SP, vector<int> &LB, int *ID, int NUM, int NUM_1, int w_w = 1, int maxD=10, int minL=1, float minInfo=0);
 	~Tree();
 	void train();
 	int predict(Mat test_set);

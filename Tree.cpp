@@ -1,37 +1,36 @@
 #include "Tree.h"
 
-Tree::Tree(vector<Mat> SP, vector<int> LB, int w_w, int maxD, int minL, float minInfo){
+Tree::Tree(vector<Mat> &SP, vector<int> &LB, int *ID, int NUM, int NUM_1, int w_w, int maxD, int minL, float minInfo){
 	window_width = w_w;
 
-	sample.assign(SP.begin(), SP.end());
-	label.assign(LB.begin(), LB.end());
-	num_1 = accumulate(label.begin(), label.end(),0);
-	num_0 = label.size() - num_1;
-
+	sample = SP;
+	label = LB;
+	index = ID;
+	count = NUM;
+	num_1 = NUM_1;
+	num_0 = count - num_1;
 
 	maxDepth = maxD;
 	NodeNum = (int)pow(2.0,maxDepth)-1;
 	minLeafSample = minL;
 	minInfoGain = minInfo;
 	node = new Node*[NodeNum];
-	node[0] = new Node(sample, label, window_width);
+	node[0] = new Node(sample, label, index, count, num_1, window_width);
 	for(int i=1; i<NodeNum; i++)
 		node[i] = NULL;
 }
 
 Tree::~Tree(){
-	for(int i=0; i<NodeNum; i++){
+	/*for(int i=0; i<NodeNum; i++){
 		if(node[i] != NULL){
 			delete node[i];
 			node[i] = NULL;
 		}
-	}
+	}*/
 
-	delete[] node;
+	delete []node;
 	node = NULL;
-
-	sample.clear();
-	label.clear();
+	delete []index;
 }
 
 void Tree::train(){
@@ -69,8 +68,8 @@ void Tree::train(){
 		//cout << "infoGain = " << node[i]->get_infoGain() << endl;
 
 		if(node[i]->get_infoGain() > minInfoGain){
-			node[i*2+1] = new Node(node[i]->get_Left(), node[i]->get_Left_Label(), window_width);
-			node[i*2+2] = new Node(node[i]->get_Right(), node[i]->get_Right_Label(), window_width);
+			node[i*2+1] = new Node(sample, label, node[i]->get_Left_index(), node[i]->get_Left_num(), node[i]->get_Left_positive(), window_width);
+			node[i*2+2] = new Node(sample, label, node[i]->get_Right_index(), node[i]->get_Right_num(), node[i]->get_Right_positive(), window_width);
 			node[i]->release_Vector();
 		}
 		else{

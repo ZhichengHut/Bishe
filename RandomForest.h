@@ -2,9 +2,7 @@
 #define RANDOMFOREST_H
 
 #include <fstream>
-
 #include "Tree.h"
-#include "Data.h"
 
 class RandomForest{
 private:
@@ -17,15 +15,15 @@ private:
 
 	vector<Mat> imgData;
 	vector<int> LabelData;
-	vector<Data*> data;
 
 	Tree **tree;
 
 public:
-	RandomForest(vector<Mat> img, vector<int> label, int w_w = 1, int t_n = 1, int s_n = 3000, int maxD=10, int minL=1, float minInfo=0);
+	RandomForest(vector<Mat> &img, vector<int> &label, int w_w = 1, int t_n = 1, int s_n = 3000, int maxD=10, int minL=1, float minInfo=0);
 	~RandomForest();
 	void train();
 	float predict(Mat test_img);
+	vector<float> predict(vector<Mat> test_img);
 };
 
 #endif//RANDOMFOREST_H

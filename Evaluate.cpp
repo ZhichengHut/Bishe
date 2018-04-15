@@ -1,5 +1,105 @@
 #include "Evaluate.h"
 
+void get_predict_result(RandomForest *RF, string test_fold){
+    char curDir[100];
+
+    for(int c=10; c<=12; c++){
+		list<Mat> imgList;
+		sprintf(curDir, "%s%02i", test_fold.c_str(), c);
+		cout << curDir << endl;
+
+		DIR* pDIR;
+		struct dirent *entry;
+		struct stat s;
+
+		stat(curDir,&s);
+
+		// if path is a directory
+		if ( (s.st_mode & S_IFMT ) == S_IFDIR ){
+			if(pDIR=opendir(curDir)){
+				//for all entries in directory
+				while(entry = readdir(pDIR)){
+					stat((curDir + string("/") + string(entry->d_name)).c_str(),&s);
+					if (((s.st_mode & S_IFMT ) != S_IFDIR ) && ((s.st_mode & S_IFMT) == S_IFREG )){
+						if(string(entry->d_name).substr(string(entry->d_name).find_last_of('.') + 1) == "tif"){
+							//find the corresponding fold according to the image name
+							string sub_curDIR = string(curDir) + "/" + string(entry->d_name).substr(0,2);
+							cout << "current img: " << sub_curDIR << endl;
+							
+							vector<Mat> imgTest;
+
+							DIR* subDIR;
+							struct dirent *sub_entry;
+							struct stat sub_s;
+
+							stat(sub_curDIR.c_str(), &sub_s);
+
+							/////////extract the test image and their position
+							if((sub_s.st_mode & S_IFMT) == S_IFDIR ){
+								if(subDIR=opendir(sub_curDIR.c_str())){
+									while(sub_entry = readdir(subDIR)){
+										stat((sub_curDIR + string("/") + string(sub_entry->d_name)).c_str(),&sub_s);
+										if (((sub_s.st_mode & S_IFMT ) != S_IFDIR ) && ((sub_s.st_mode & S_IFMT) == S_IFREG )){
+											if(string(sub_entry->d_name).substr(string(sub_entry->d_name).find_last_of('.') + 1) == "png"){
+												Mat img_tmp = imread(sub_curDIR + string("/") + string(sub_entry->d_name), 1);
+												imgTest.push_back(img_tmp);
+											}
+										}
+									}
+								}
+							}
+							vector<float> result = RF->predict(imgTest);
+							imgTest.clear();
+
+							int m = sqrt(result.size()*1.0);
+
+							Mat heat_map_tmp = Mat::zeros(m,m,CV_32FC1);
+							for(int j=0; j<m; j++){
+								for(int i=0; i<m; i++){
+									heat_map_tmp.at<float>(i,j) = result[j*m+i];
+								}
+							}
+
+							Mat heat_map = Mat::zeros(2000,2000,CV_32FC1);
+							resize(heat_map_tmp,heat_map,Size(2000,2000));
+
+							threshold(heat_map, heat_map, 0.5,255 ,THRESH_BINARY);
+
+							Mat kernel = Mat::ones(3,3,CV_32FC1);
+							int iteration = 3;
+							
+							/// Apply the close operation
+							morphologyEx(heat_map,heat_map, MORPH_CLOSE, kernel, Point(-1,-1), iteration);
+							//heat_map.convertTo(heat_map,CV_32FC3);
+							//cvtColor(heat_map,heat_map, CV_RGB2GRAY);
+
+							imwrite(sub_curDIR + string("/heat.png"),heat_map);
+							heat_map = imread(sub_curDIR + string("/heat.png"),0);
+							remove((sub_curDIR + string("/heat.png")).c_str());
+
+							int R = 10;
+							vector<Point2i> center = getCenter(heat_map, R);
+							int cell_num = center.size();
+							cout << "mitosis number: " << cell_num << endl;
+
+							string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
+							ofstream fout(csv_name);
+							for(int i=0; i< cell_num; i++){
+								int x = center[i].x;
+								int y = center[i].y;
+								
+								fout << y << "," <<  x << endl;
+							}
+							center.clear();
+							fout.close();
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 void get_predict_result(RandomForest *RF, string test_fold, int width, int sample_interval, float prob_threshold){
     char curDir[100];
 

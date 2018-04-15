@@ -23,29 +23,37 @@ private:
 	int d;
 	float theta;
 	int sample_num;
+	int num_1;
 	//int threshold;
 	bool LeafNode;
 	float infoGain;
 	float Entro;
 	vector<Mat> imgList;
-	vector<Mat> leftImg;
-	vector<Mat> rightImg;
 	vector<int> imgLabel;
-	vector<int> leftLabel;
-	vector<int> rightLabel;
+	int *index;
+	int *left_index;
+	int *right_index;
+	int count_left;
+	int count_right;
+	int count_left_1;
+	int count_right_1;
 
 public:
-	Node(vector<Mat> sample, vector<int>label, int w_w = 1);
+	Node(vector<Mat> &sample, vector<int> &label, int *ID, int NUM, int NUM_1, int w_w = 1);
 	~Node();
-	inline vector<Mat> get_Left(){return leftImg;};
-	inline vector<Mat> get_Right(){return rightImg;};
-	inline vector<int> get_Left_Label(){return leftLabel;};
-	inline vector<int> get_Right_Label(){return rightLabel;};
+
+	inline int *get_Left_index(){return left_index;};
+	inline int *get_Right_index(){return right_index;};
+	inline int get_Left_num(){return count_left;};
+	inline int get_Right_num(){return count_right;};
+	inline int get_Left_positive(){return count_left_1;};
+	inline int get_Right_positive(){return count_right_1;};
+
 	inline void setLeaf(){LeafNode = true;};
 	inline bool isLeaf(){return LeafNode;};
 	void select_Para();
 	//void calculate_infoGain();
-	float calculate_entropy(vector<int> label);
+	float calculate_entropy(int count, int label_1);
 	inline float get_infoGain(){return infoGain;};
 	void split_Node();
 	void release_Vector();
