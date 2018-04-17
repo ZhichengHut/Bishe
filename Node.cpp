@@ -169,6 +169,10 @@ void Node::split_Node(){
 
 void Node::release_Vector(){
 	delete []index;
+	imgList.clear();
+	vector<Mat>().swap(imgList);
+	imgLabel.clear();
+	vector<int>().swap(imgLabel);
 	//delete []left_index;
 	//delete []right_index;
 }

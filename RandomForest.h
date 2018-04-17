@@ -23,7 +23,7 @@ public:
 	~RandomForest();
 	void train();
 	float predict(Mat test_img);
-	vector<float> predict(vector<Mat> test_img);
+	vector<float> predict(vector<Mat> &test_img);
 };
 
 #endif//RANDOMFOREST_H

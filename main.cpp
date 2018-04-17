@@ -8,13 +8,6 @@
 
 #include <time.h>
 
-void copy1(vector<Mat> &lb){
-	vector<Mat> img_cp = lb;
-	cout << "copy1, size = " << sizeof(img_cp) << endl;
-	imshow("123", img_cp[0]);
-	waitKey(0);
-}
-
 int main(){
 	string train_fold = "C:/45 Thesis/data/train/";
 	string test_fold = "C:/45 Thesis/data/test/";
@@ -43,18 +36,7 @@ int main(){
 	//end_rd = clock();
 	//cout << "read time = " << end_rd - start_rd << endl;
 	cout << "*****************Reading completed*****************" << endl << endl;
-
-	cout << "origianl" << sizeof(imgTrain) << endl;
-	copy1(imgTrain);
-	cin.get();
-
-	/*cin.get();
-	imgTrain.clear();
-	cout << "clear completed" << endl;
-	cin.get();
-	vector<Mat>(imgTrain).swap(imgTrain);
-	cout << "swap completed" << endl;
-	cin.get();*/
+	cout << "size = " << imgTrain.size() << endl;
 
 	double start,end;
 

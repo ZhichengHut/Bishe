@@ -21,16 +21,21 @@ Tree::Tree(vector<Mat> &SP, vector<int> &LB, int *ID, int NUM, int NUM_1, int w_
 }
 
 Tree::~Tree(){
-	/*for(int i=0; i<NodeNum; i++){
+	for(int i=0; i<NodeNum; i++){
 		if(node[i] != NULL){
 			delete node[i];
 			node[i] = NULL;
 		}
-	}*/
+	}
 
 	delete []node;
 	node = NULL;
 	delete []index;
+
+	sample.clear();
+	vector<Mat>().swap(sample);
+	label.clear();
+	vector<int>().swap(label);
 }
 
 void Tree::train(){

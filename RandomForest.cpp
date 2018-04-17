@@ -23,15 +23,20 @@ RandomForest::RandomForest(vector<Mat> &img, vector<int> &label, int w_w, int t_
 }
 
 RandomForest::~RandomForest(){
-	/*for(int i=0; i<tree_num; i++){
+	for(int i=0; i<tree_num; i++){
 		if(tree[i] != NULL){
 			delete tree[i];
 			tree[i] = NULL;
 		}
-	}*/
+	}
 
 	delete []tree;
 	tree = NULL;
+
+	imgData.clear();
+	vector<Mat>().swap(imgData);
+	LabelData.clear();
+	vector<int>().swap(LabelData);
 }
 
 void RandomForest::train(){
@@ -70,7 +75,7 @@ float RandomForest::predict(Mat test_img){
 	return 1.0*vote/tree_num;
 }
 
-vector<float> RandomForest::predict(vector<Mat> test_img){
+vector<float> RandomForest::predict(vector<Mat> &test_img){
 	//cout << "Start to predict" << endl;
 	//cout << "test size = " << test_img.size() << endl;
 	vector<float> predict_result;
